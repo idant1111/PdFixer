@@ -21,7 +21,8 @@ class ImageFormats:
         
 class Globals:
         temp_path = "C:\\pdfixer_files"
-        middlepath = "C:\\pdfixer_files\\temp" 
+        middlepath = "C:\\pdfixer_files\\temp"
+        extractedpath = "C:\\pdfixer_files\\extracted"
         input_file = ""
         output_dir = ""
         temporary_file = ""
@@ -66,7 +67,8 @@ def move_pdf():
 def unpack_pdf():
     images = convert_from_path(Globals.temporary_file,  dpi=150, output_folder=Globals.middlepath)
     for i in range(len(images)):
-        images[i].save('page'+ str(i) +'.jpg', 'JPEG')
+        images[i].save('page'+ str(i) +'.jpg')
+        
         
 
 #####
@@ -108,6 +110,8 @@ def create_temp_dir():
     print("temp created")
     os.makedirs(Globals.middlepath)
     print("middlepath created")
+    os.makedirs(Globals.extractedpath)
+    print("extractedpath created")
     # move_pdf()
     
 
