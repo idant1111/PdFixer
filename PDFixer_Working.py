@@ -66,6 +66,10 @@ def move_pdf():
     print(Globals.temporary_file)
     unpack_pdf()
 
+def finish_operation():
+    current = os.path.abspath(os.getcwd())
+    shutil.copy(current+"\\"+"images.pdf", Globals.output_dir)
+
 def unpack_pdf():
     images = convert_from_path(Globals.temporary_file,  dpi=150, output_folder=Globals.middlepath, fmt='jpg')
     ###
@@ -77,8 +81,11 @@ def unpack_pdf():
     for img in img_list:
         pdf.add_page()
         imag = Globals.middlepath+"\\"+img
-        pdf.image(imag)
+        pdf.image(imag, w=200, h=260)
     pdf.output("images.pdf")
+    
+
+
 
 
 root = Tk()
@@ -88,6 +95,7 @@ root.title('Hello, I\'m the main window')
 Button(root, text='יש לבחור קובץ אחד', bg='#F0F8FF', font=('arial', 12, 'normal'), command=btnClickFunction).place(x=237, y=250)
 Button(root, text='לאן לחלץ את הקובץ', bg='#F0F8FF', font=('arial', 12, 'normal'), command=btnClickFunctionFolder).place(x=237, y=300)  
 Button(root, text='ביצוע', bg='#F0F8FF', font=('arial', 12, 'normal'), command=move_pdf).place(x=237, y=350)
+Button(root, text='סיום', bg='#F0F8FF', font=('arial', 12, 'normal'), command=finish_operation).place(x=237, y=400)
 pathlabel1 = Label(root)
 pathlabel2 = Label(root)
 pathlabel1.pack()
