@@ -1,0 +1,99 @@
+import sys
+import os
+import shutil
+import argparse
+from tkinter import filedialog
+import img2pdf
+from pdf2image import convert_from_path
+import pathlib
+###
+import tkinter as tk
+from tkinter import ttk
+from tkinter import * 
+###
+class ImageFormats:
+        JPG = "jpg"
+        PNG = "png"
+        TIFF = "tiff"
+        PPM = "ppm"
+        
+class Globals:
+        temp_path = "C:\\pdfixer_files"
+        input_file = ""
+        output_dir = ""
+        
+        
+####### TK #####
+
+def create_temp_dir():
+    os.makedirs(Globals.temp_path)
+    print("temp created")
+    # move_pdf()
+    delete_temp_dir()
+
+
+
+def browsefunc():
+    filename = filedialog.askopenfilename(title='Please select a file')
+    pathlabel1.config(text=filename)  
+    Globals.input_file =  filename
+    print(Globals.input_file)
+
+    
+def folderBrowse():
+    dirname = filedialog.askdirectory(parent=root,initialdir="/",title='Please select a directory')
+    pathlabel2.config(text=dirname)
+    Globals.output_dir = dirname
+    print(Globals.output_dir)
+    
+def btnClickFunction():
+    browsefunc()
+
+def btnClickFunctionFolder():
+    folderBrowse()
+
+def move_pdf():
+    temp_file = Globals.input_file
+    shutil.copy(temp_file, Globals.temp_path)
+    print("copied")
+
+def unpack_pdf():
+    convert_from_path(Globals.temp_path)
+
+
+root = Tk()
+root.geometry('601x435')
+root.configure(background='#00FFFF')
+root.title('Hello, I\'m the main window')
+Button(root, text='Button file!', bg='#F0F8FF', font=('arial', 12, 'normal'), command=btnClickFunction).place(x=237, y=250)
+Button(root, text='Button folder!', bg='#F0F8FF', font=('arial', 12, 'normal'), command="").place(x=237, y=300)
+Button(root, text='Move!', bg='#F0F8FF', font=('arial', 12, 'normal'), command=move_pdf).place(x=237, y=350)
+pathlabel1 = Label(root)
+pathlabel2 = Label(root)
+pathlabel1.pack()
+pathlabel2.pack()
+
+#####
+        
+def create_temp_dir():
+    os.makedirs(Globals.temp_path)
+    print("temp created")
+    # move_pdf()
+    
+
+def delete_temp_dir():
+    shutil.rmtree(Globals.temp_path)
+        
+
+
+def main():
+    create_temp_dir()
+    root.mainloop()
+    
+
+    
+if __name__ == "__main__":
+    main()
+    
+    
+    
