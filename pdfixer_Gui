@@ -6,10 +6,12 @@ from tkinter import filedialog
 import img2pdf
 from pdf2image import convert_from_path
 import pathlib
+from fpdf import FPDF
 ###
 import tkinter as tk
 from tkinter import ttk
 from tkinter import * 
+from PIL import Image
 
 poppler_path = r"C:\Users\User\Documents\poppler-22.11.0\Library\bin"
 ###
@@ -65,31 +67,72 @@ def move_pdf():
     unpack_pdf()
 
 def unpack_pdf():
-    images = convert_from_path(Globals.temporary_file,  dpi=150, output_folder=Globals.middlepath)
-    for i in range(len(images)):
-        images[i].save('page'+ str(i) +'.jpg')
+    images = convert_from_path(Globals.temporary_file,  dpi=150, output_folder=Globals.middlepath, fmt='jpg')
+    ###
+    pdf = FPDF(orientation='P', unit='mm', format='A4')
+    data = pdf.output("data.pdf", Globals.output_dir)
+    # shutil.move(data, Globals.output_dir+"//"+"test")
+    imgs = []
+    for file in sorted(os.listdir(Globals.middlepath)):
+        if not file.endswith("."+"jpg"):
+            continue
+        for i in range(len(imgs)):
+            pdf.add_page()
+            print("pdf page {} created".format(i+1))
+        path = os.path.join(Globals.middlepath, file)
+        
+        if os.path.isdir(path):
+            continue
+        
+        imgs.append(path)
+        print(imgs)
+    # pdfile = open(Globals.output_dir, "wb")
+    # pdfile.write(images)   
+    
+    
+
+    
+    
+        
+    
         
         
 
 #####
-def rebuild_pdf(img_format=ImageFormats.JPG):
-    with open(Globals.temporary_file, "wb") as new_pdf:
-        imgs = []
-        for fname in sorted(os.listdir(Globals.temp_path)):
-            if not fname.endswith("."+img_format):
-                continue
+# def rebuild_pdf(img_format=ImageFormats.JPG):
+    # with open(Globals.temporary_file, "wb") as new_pdf:
+    #     imgs = []
+    #     for fname in sorted(os.listdir(Globals.middlepath)):
+    #         if not fname.endswith("."+img_format):
+    #             continue
 
-            path = os.path.join(Globals.temp_path, fname)
+    #         path = os.path.join(Globals.temp_path, fname)
 
-            if os.path.isdir(path):
-                continue
+    #         if os.path.isdir(path):
+    #             continue
 
-            imgs.append(path)
+    #         imgs.append(path)
         
-        new_pdf.write(img2pdf.convert(imgs.getvalue()))
+    #     new_pdf.write(img2pdf.convert(imgs))
         
 #####
-
+# 
+# def re_build(img_format=ImageFormats.JPG):
+#     imgs = []
+#     for f in sorted(os.listdir(Globals.middlepath)):
+#         if not f.endswith("."+img_format):
+#             continue
+        
+#         path = os.path.join(Globals.middlepath, f)
+        
+#         if os.path.isdir(path):
+#             continue
+        
+#         imgs.append(path)
+        
+#     pdfile = open(Globals.output_dir, "wb")
+#     pdfile.write(images)
+#     return 0
 
 root = Tk()
 root.geometry('601x435')
