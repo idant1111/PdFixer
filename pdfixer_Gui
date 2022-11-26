@@ -21,7 +21,7 @@ class Globals:
         temp_path = "C:\\pdfixer_files"
         input_file = ""
         output_dir = ""
-        
+        temporary_file = ""
         
 ####### TK #####
 
@@ -56,9 +56,29 @@ def move_pdf():
     temp_file = Globals.input_file
     shutil.copy(temp_file, Globals.temp_path)
     print("copied")
+    Globals.temporary_file = temp_file
+    print(Globals.temporary_file)
 
 def unpack_pdf():
     convert_from_path(Globals.temp_path)
+
+# #####
+# def rebuild_pdf():
+#     with open(pdf_path, "wb") as new_pdf:
+#         imgs = []
+#         for fname in sorted(os.listdir(Globals.temp_path)):
+#             if not fname.endswith("."+img_format):
+#                 continue
+
+#             path = os.path.join(Globals.temp_path, fname)
+
+#             if os.path.isdir(path):
+#                 continue
+
+#             imgs.append(path)
+        
+#         new_pdf.write(img2pdf.convert(imgs))
+# #####
 
 
 root = Tk()
