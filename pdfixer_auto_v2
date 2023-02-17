@@ -6,9 +6,8 @@ from pdf2image import convert_from_path
 from fpdf import FPDF
 
 
-MONITOR_DIRECTORY = "\\input"
-OUTPUT_DIRECTORY = "\\output"
-
+MONITOR_DIRECTORY = "C:\\Users\\idant\\Documents\\development\\nanoFixer\\input"
+OUTPUT_DIRECTORY = "C:\\Users\\idant\\Documents\\development\\nanoFixer\\output"
 
 class FileProcessor:
     def __init__(self, path):
@@ -68,6 +67,7 @@ class FileProcessor:
                 archive_path = os.path.join(self.path, 'archive')
                 os.makedirs(archive_path, exist_ok=True)
                 shutil.move(zip_path, os.path.join(archive_path, file_name))
+
 
 class FolderMonitor:
     def __init__(self, path):
