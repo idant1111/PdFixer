@@ -11,6 +11,12 @@ poppler_path = "C:\\Users\\idant\\Documents\\poppler-22.11.0\\Library\\bin"
 MONITOR_DIRECTORY = "C:\\Users\\idant\\Documents\\development\\nanoFixer\\input"
 OUTPUT_DIRECTORY = "C:\\Users\\idant\\Documents\\development\\nanoFixer\\output"
 
+class ImageFormats:
+        JPG = "jpg"
+        # PNG = "png"
+        # TIFF = "tiff"
+        # PPM = "ppm"
+
 class FileProcessor:
     def __init__(self, path):
         self.path = path
@@ -19,13 +25,15 @@ class FileProcessor:
         """
         Processes files in a directory
         """
+        
         for file_name in os.listdir(self.path):
             if file_name.endswith(".zip"):
                 zip_path = os.path.join(self.path, file_name)
                 with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                     temp_dir = os.path.join(self.path, 'temp')
-                    os.makedirs(temp_dir, exist_ok=True)
+                    os.makedirs(temp_dir, exist_ok=False)
                     pdf_files = []
+                    pdf = FPDF()
                     for zip_file_name in zip_ref.namelist():
                         if zip_file_name.endswith(".pdf"):
                             pdf_files.append(zip_file_name)
@@ -34,8 +42,7 @@ class FileProcessor:
                             with open(pdf_file_path, 'wb') as f:
                                 f.write(zip_ref.read(zip_file_name))
                             # Convert the PDF to images
-                            images = convert_from_path(pdf_file_path, dpi=150)
-                            pdf = FPDF()
+                            images = convert_from_path(pdf_file_path, dpi=150, fmt='jpg')
                             for i, image in enumerate(images):
                                 image_path = os.path.join(temp_dir, f"{os.path.splitext(zip_file_name)[0]}_{i}.jpg")
                                 image.save(image_path)
