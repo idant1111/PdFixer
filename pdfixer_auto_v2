@@ -5,6 +5,8 @@ import zipfile
 from pdf2image import convert_from_path
 from fpdf import FPDF
 
+poppler_path = "C:\\Users\\idant\\Documents\\poppler-22.11.0\\Library\\bin"
+
 
 MONITOR_DIRECTORY = "C:\\Users\\idant\\Documents\\development\\nanoFixer\\input"
 OUTPUT_DIRECTORY = "C:\\Users\\idant\\Documents\\development\\nanoFixer\\output"
