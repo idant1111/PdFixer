@@ -1,0 +1,101 @@
+import os
+import shutil
+import time
+import zipfile
+from pdf2image import convert_from_path
+from fpdf import FPDF
+
+
+MONITOR_DIRECTORY = "\\input"
+OUTPUT_DIRECTORY = "\\output"
+
+
+class FileProcessor:
+    def __init__(self, path):
+        self.path = path
+
+    def process_files(self):
+        """
+        Processes files in a directory
+        """
+        for file_name in os.listdir(self.path):
+            if file_name.endswith(".zip"):
+                zip_path = os.path.join(self.path, file_name)
+                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                    temp_dir = os.path.join(self.path, 'temp')
+                    os.makedirs(temp_dir, exist_ok=True)
+                    pdf_files = []
+                    for zip_file_name in zip_ref.namelist():
+                        if zip_file_name.endswith(".pdf"):
+                            pdf_files.append(zip_file_name)
+                            # Extract the PDF file to a temporary directory
+                            pdf_file_path = os.path.join(temp_dir, zip_file_name)
+                            with open(pdf_file_path, 'wb') as f:
+                                f.write(zip_ref.read(zip_file_name))
+                            # Convert the PDF to images
+                            images = convert_from_path(pdf_file_path, dpi=150)
+                            pdf = FPDF()
+                            for i, image in enumerate(images):
+                                image_path = os.path.join(temp_dir, f"{os.path.splitext(zip_file_name)[0]}_{i}.jpg")
+                                image.save(image_path)
+                                with open(image_path, 'rb') as image_file:
+                                    image_data = image_file.read()
+                                    pdf.add_page()
+                                    pdf.image(image_path)
+                            os.remove(pdf_file_path)
+                    xml_file_names = [name for name in zip_ref.namelist() if name.endswith(".xml")]
+                    if not xml_file_names:
+                        print(f"No XML file found in {zip_path}")
+                        continue
+                    xml_file_name = xml_file_names[0]
+                    new_pdf_name = os.path.splitext(xml_file_name)[0] + '_new.pdf'
+                    new_pdf_path = os.path.join(OUTPUT_DIRECTORY, new_pdf_name)
+                    pdf.output(new_pdf_path, 'F')
+                    print(f"Built new PDF file: {new_pdf_name}")
+                    with zipfile.ZipFile(os.path.join(OUTPUT_DIRECTORY, f"{os.path.splitext(xml_file_name)[0]}.zip"), 'w') as new_zip:
+                        for pdf_file in pdf_files:
+                            new_pdf_path = os.path.join(temp_dir, f"{os.path.splitext(pdf_file)[0]}_new.pdf")
+                            xml_path = os.path.join(temp_dir, f"{os.path.splitext(pdf_file)[0]}.xml")
+                            if not xml_path in zip_ref.namelist():
+                                print(f"No XML file found for PDF file {pdf_file}")
+                                continue
+                            zip_ref.extract(xml_path, temp_dir)
+                            new_zip.write(new_pdf_path, os.path.basename(new_pdf_path))
+                            new_zip.write(xml_path, os.path.basename(xml_path))
+                        print(f"Built new ZIP file: {os.path.splitext(xml_file_name)[0]}.zip")
+                    shutil.rmtree(temp_dir)
+                    print(f"Deleted temp directory: {temp_dir}")
+                archive_path = os.path.join(self.path, 'archive')
+                os.makedirs(archive_path, exist_ok=True)
+                shutil.move(zip_path, os.path.join(archive_path, file_name))
+
+class FolderMonitor:
+    def __init__(self, path):
+        self.path = path
+
+    def monitor(self):
+        """
+        Monitors a directory for changes every minute
+        """
+        file_list = []
+        while True:
+            new_list = os.listdir(self.path)
+            if new_list != file_list:
+                file_list = new_list
+                print(f"Scanning folder {self.path}...")
+                zip_files = [f for f in file_list if f.endswith(".zip")]
+                if zip_files:
+                    print(f"Found {len(zip_files)} ZIP files: {', '.join(zip_files)}")
+                    file_processor = FileProcessor(self.path)
+                    file_processor.process_files()
+            time.sleep(60)
+
+
+def main():
+    monitor = FolderMonitor(MONITOR_DIRECTORY)
+    monitor.monitor()
+
+
+if __name__ == '__main__':
+    os.makedirs(OUTPUT_DIRECTORY, exist_ok=True)
+    main()
