@@ -1,0 +1,125 @@
+import os
+import shutil
+import tempfile
+import zipfile
+import time
+from pdf2image import convert_from_path
+from PIL import Image
+
+poppler_path = "C:\\Users\\idant\\Documents\\poppler-22.11.0\\Library\\bin"
+
+
+input_folder = "C:\\Users\\idant\\Documents\\development\\nanoFixer\\input"  # replace with your actual input folder path
+archive_folder = "C:\\Users\\idant\\Documents\\development\\nanoFixer\\archive"  # replace with your actual archive folder path
+output_folder = "C:\\Users\\idant\\Documents\\development\\nanoFixer\\output"  # replace with your actual output folder path
+
+def create_pdf_from_images(pdf_file, image_files):
+    # sort the image files in ascending order by their filename
+    image_files = sorted(image_files, key=lambda x: int(os.path.splitext(os.path.basename(x))[0].split("_")[-1]))
+
+    # create a new PDF file with the same name as the original PDF
+    with Image.open(image_files[0]) as first_image:
+        pdf_width, pdf_height = first_image.size
+        pdf_file_path = os.path.splitext(pdf_file)[0] + "_converted.pdf"
+        pdf = Image.new('RGB', (pdf_width, pdf_height * len(image_files)))
+
+        # paste each image into the PDF at the correct position
+        for i, image_file in enumerate(image_files):
+            with Image.open(image_file) as image:
+                pdf.paste(image, (0, i * pdf_height))
+
+        # save the PDF file
+        pdf.save(pdf_file_path, "PDF", resolution=100.0)
+        print(f"PDF file created: {pdf_file_path}")
+
+    return pdf_file_path
+
+def create_zip_file(xml_file, pdf_file):
+    # create a zip file with the same name as the original PDF file
+    zip_file_path = os.path.splitext(pdf_file)[0] + ".zip"
+    with zipfile.ZipFile(zip_file_path, 'w') as zip_file:
+        # add the XML and new PDF files to the zip file
+        zip_file.write(xml_file, os.path.basename(xml_file))
+        zip_file.write(pdf_file, os.path.basename(pdf_file))
+
+    print(f"Zip file created: {zip_file_path}")
+
+    return zip_file_path
+
+def move_zip_file(zip_file_path):
+    # create the archive folder if it doesn't exist
+    if not os.path.exists(archive_folder):
+        os.makedirs(archive_folder)
+
+    # move the zip file to the archive folder
+    shutil.move(zip_file_path, archive_folder)
+    print(f"Zip file moved to archive folder: {archive_folder}")
+
+    # create the output folder if it doesn't exist
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    # copy the zip file to the output folder
+    shutil.copy(os.path.join(archive_folder, os.path.basename(zip_file_path)), output_folder)
+    print(f"Zip file copied to output folder: {output_folder}")
+
+while True:
+    # get a list of all files in the input folder
+    files = os.listdir(input_folder)
+
+    # loop through the files and check if they have a .zip extension
+    for file in files:
+        if file.endswith(".zip"):
+            # create a temporary folder to extract the zip file
+            temp_folder = tempfile.mkdtemp()
+            
+            # copy the zip file to the temporary folder
+            src_file = os.path.join(input_folder, file)
+            dest_file = os.path.join(temp_folder, file)
+            shutil.copy(src_file, dest_file)
+
+            # extract the zip file in the temporary folder
+            with zipfile.ZipFile(dest_file, 'r') as zip_ref:
+                zip_ref.extractall(temp_folder)
+            
+            # loop through the extracted files and check their type
+            extracted_files = os.listdir(temp_folder)
+            xml_file = None
+            pdf_images = []
+            for extracted_file in extracted_files:
+                if extracted_file.endswith(".xml"):
+                    # if the file is an xml file, store its filename
+                    xml_file = os.path.join(temp_folder, extracted_file)
+                elif extracted_file.endswith(".pdf"):
+                    # if the file is a pdf file, create a temporary folder and extract each page as a jpg image
+                    pdf_file = os.path.join(temp_folder, extracted_file)
+                    images = convert_from_path(pdf_file)
+                    for i, image in enumerate(images):
+                        # save each page image in the temporary folder
+                        image_file = f"{extracted_file}_page_{i+1}.jpg"
+                        image_path = os.path.join(temp_folder, image_file)
+                        image.save(image_path, "JPEG")
+                        pdf_images.append(image_path)
+                elif extracted_file.endswith(".jpg"):
+                    # if the file is already a jpg file, add it to the list of images
+                    image_path = os.path.join(temp_folder, extracted_file)
+                    pdf_images.append(image_path)
+            
+            # create a PDF file from the extracted images (if any)
+            if pdf_images:
+                pdf_file = create_pdf_from_images(pdf_file, pdf_images)
+            else:
+                pdf_file = None
+            
+            # create a zip file with the XML and new PDF files (if any)
+            if xml_file or pdf_file:
+                zip_file_path = create_zip_file(xml_file, pdf_file)
+                
+                # move the zip file to the archive and output folders
+                move_zip_file(zip_file_path)
+            
+            # remove the temporary folder
+            shutil.rmtree(temp_folder)
+    
+    # wait for one minute before checking for new files
+    time.sleep(60)
